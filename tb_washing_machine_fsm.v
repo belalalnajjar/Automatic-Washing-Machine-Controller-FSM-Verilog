@@ -150,11 +150,8 @@ module tb_washing_machine_fsm;
         cancel = 1;
         #20;
         cancel = 0;
-
         #50;
-
         $display("Simulation finished.");
         $stop;
     end
-
 endmodule
