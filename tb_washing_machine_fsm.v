@@ -46,13 +46,13 @@ module tb_washing_machine_fsm;
         .led_error(led_error)
     );
 
-    // Clock generation: 10 ns period
+    // Clock generats per 10 ns
     initial begin
         clk = 0;
         forever #5 clk = ~clk;
     end
 
-    // Task: clear all timer / sensor signals
+    // Task, clear all timer + sensor signals
     task clear_signals;
     begin
         start       = 0;
@@ -66,60 +66,52 @@ module tb_washing_machine_fsm;
     endtask
 
     initial begin
-        // Initial values
         lid_closed = 1;
         clear_signals();
 
-        // Reset
         reset = 1;
         #20;
         reset = 0;
 
-        //------------------------------------------------------------------
-        // TEST 1: Normal complete wash cycle
-        //------------------------------------------------------------------
+        // test 1 - Normal complete wash cycle
         $display("=== TEST 1: Normal cycle ===");
         #10;
-        start = 1;    // pulse start
+        start = 1;
         #10;
         start = 0;
 
-        // After some time, water becomes full
+        // After time, water gets full
         #50;
         water_full = 1;
         #10;
         water_full = 0;
 
-        // After some time, wash finished
+        
         #80;
         t_wash_done = 1;
         #10;
         t_wash_done = 0;
 
-        // Drain finished
+        // Drain done
         #60;
         t_drain_done = 1;
         #10;
         t_drain_done = 0;
 
-        // Rinse finished
+        // Rinse done
         #60;
         t_rinse_done = 1;
         #10;
         t_rinse_done = 0;
 
-        // Spin finished
+        // Spin done
         #80;
         t_spin_done = 1;
         #10;
         t_spin_done = 0;
-
-        // Wait in DONE
         #50;
 
-        //------------------------------------------------------------------
-        // TEST 2: Lid opens during SPIN (safety pause)
-        //------------------------------------------------------------------
+        // test 2 - Lid opens during spin
         $display("=== TEST 2: Lid open during spin ===");
         clear_signals();
         lid_closed = 1;
@@ -128,26 +120,24 @@ module tb_washing_machine_fsm;
         start = 1;
         #10; start = 0;
 
-        // Straight to SPIN using artificial timers
+        // Straight to spin
         #40; water_full = 1; #10; water_full = 0;
         #40; t_wash_done = 1; #10; t_wash_done = 0;
         #40; t_drain_done = 1; #10; t_drain_done = 0;
         #40; t_rinse_done = 1; #10; t_rinse_done = 0;
 
-        // Now in SPIN. Open lid.
+        // Now in spin. Open lid.
         #40;
-        lid_closed = 0;   // should go to PAUSE_SPIN
+        lid_closed = 0;   // should be PAUSE_SPIN
         #60;
-        lid_closed = 1;   // should return to SPIN
+        lid_closed = 1;   // should go back to SPIN
 
         #60;
         t_spin_done = 1; #10; t_spin_done = 0;
 
         #40;
-
-        //------------------------------------------------------------------
-        // TEST 3: Cancel during WASH
-        //------------------------------------------------------------------
+        
+        // test 3 - Cancel during WASH
         $display("=== TEST 3: Cancel during wash ===");
         clear_signals();
         lid_closed = 1;
@@ -155,8 +145,7 @@ module tb_washing_machine_fsm;
         start = 1; #10; start = 0;
 
         #40; water_full = 1; #10; water_full = 0;
-
-        // Now in WASH, press cancel
+// Now cancel in wash
         #40;
         cancel = 1;
         #20;
@@ -169,4 +158,3 @@ module tb_washing_machine_fsm;
     end
 
 endmodule
-
