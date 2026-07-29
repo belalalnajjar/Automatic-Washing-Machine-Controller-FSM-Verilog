@@ -22,10 +22,7 @@ module washing_machine_fsm (
     output reg  led_done,
     output reg  led_error
 );
-
-    //============================================================
-    // State encoding (Moore FSM)
-    //============================================================
+    // Moore FSM
     localparam [3:0]
         S_IDLE       = 4'd0,
         S_CHECK_LID  = 4'd1,
@@ -40,24 +37,20 @@ module washing_machine_fsm (
         S_CANCELED   = 4'd10;
 
     reg [3:0] current_state, next_state;
-
-    //============================================================
+    
     // State register
-    //============================================================
     always @(posedge clk or posedge reset) begin
         if (reset)
             current_state <= S_IDLE;
         else
             current_state <= next_state;
     end
-
-    //============================================================
-    // Next-state logic (depends on current_state + inputs)
-    //============================================================
+    
+    // Next-state logic (based on current_state + inputs)
     always @(*) begin
         next_state = current_state;  // default: stay
         case (current_state)
-            //----------------------------------------------------
+            
             S_IDLE: begin
                 if (start && lid_closed)
                     next_state = S_FILL;
@@ -65,14 +58,12 @@ module washing_machine_fsm (
                     next_state = S_CHECK_LID;
             end
 
-            //----------------------------------------------------
             S_CHECK_LID: begin
                 if (lid_closed)
                     next_state = S_FILL;
                 // else stay here until lid_closed = 1
             end
 
-            //----------------------------------------------------
             S_FILL: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -80,7 +71,6 @@ module washing_machine_fsm (
                     next_state = S_WASH;
             end
 
-            //----------------------------------------------------
             S_WASH: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -90,7 +80,6 @@ module washing_machine_fsm (
                     next_state = S_DRAIN;
             end
 
-            //----------------------------------------------------
             S_PAUSE_WASH: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -98,7 +87,6 @@ module washing_machine_fsm (
                     next_state = S_WASH;
             end
 
-            //----------------------------------------------------
             S_DRAIN: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -106,7 +94,6 @@ module washing_machine_fsm (
                     next_state = S_RINSE;
             end
 
-            //----------------------------------------------------
             S_RINSE: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -114,7 +101,6 @@ module washing_machine_fsm (
                     next_state = S_SPIN;
             end
 
-            //----------------------------------------------------
             S_SPIN: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -124,7 +110,6 @@ module washing_machine_fsm (
                     next_state = S_DONE;
             end
 
-            //----------------------------------------------------
             S_PAUSE_SPIN: begin
                 if (cancel)
                     next_state = S_CANCELED;
@@ -132,32 +117,25 @@ module washing_machine_fsm (
                     next_state = S_SPIN;
             end
 
-            //----------------------------------------------------
             S_DONE: begin
-                // wait for a new start for another cycle
+                // wait for new start for next cycle
                 if (start && lid_closed)
                     next_state = S_FILL;
             end
 
-            //----------------------------------------------------
             S_CANCELED: begin
-                // after cancel, go back to idle once cancel is released
                 if (!cancel)
                     next_state = S_IDLE;
             end
 
-            //----------------------------------------------------
             default: begin
                 next_state = S_IDLE;
             end
         endcase
     end
 
-    //============================================================
-    // Output logic - Moore (depends ONLY on current_state)
-    //============================================================
+    // Output logic, depends just on current state
     always @(*) begin
-        // defaults
         fill_valve  = 1'b0;
         motor_wash  = 1'b0;
         motor_spin  = 1'b0;
@@ -169,11 +147,9 @@ module washing_machine_fsm (
 
         case (current_state)
             S_IDLE: begin
-                // everything off
             end
 
             S_CHECK_LID: begin
-                // waiting for lid; could turn on running LED if you want
             end
 
             S_FILL: begin
@@ -189,7 +165,7 @@ module washing_machine_fsm (
             end
 
             S_PAUSE_WASH: begin
-                // motors off, but still in running mode
+                // motors off, but still running mode
                 led_running = 1'b1;
             end
 
@@ -220,7 +196,7 @@ module washing_machine_fsm (
             end
 
             S_CANCELED: begin
-                led_error = 1'b1;   // indicate that a cancel occurred
+                led_error = 1'b1;   // indicate cancel happens
             end
         endcase
     end
